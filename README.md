@@ -1,18 +1,18 @@
 # toxy [![Build Status](https://api.travis-ci.org/h2non/toxy.svg?branch=master&style=flat)](https://travis-ci.org/h2non/toxy) [![Code Climate](https://codeclimate.com/github/h2non/toxy/badges/gpa.svg)](https://codeclimate.com/github/h2non/toxy) [![NPM](https://img.shields.io/npm/v/toxy.svg)](https://www.npmjs.org/package/toxy) [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com)
 
+**Hackable HTTP proxy** to **simulate** server **failure scenarios**, **systems resiliency testing** and **unexpected network conditions**, built for [node.js](http://nodejs.org).
+
 <img align="right" height="180" src="http://s8.postimg.org/ikc9jxllh/toxic.jpg" />
 
-**Hackable HTTP proxy** to **simulate** server **failure scenarios** and **unexpected network conditions**, built for [node.js](http://nodejs.org)/[io.js](https://iojs.org).
+It was mainly designed for failure resistance testing, when toxy becomes particularly useful in order to cover fault tolerance and resiliency capabilities of a system, especially in [disruption-tolerant networks](https://en.wikipedia.org/wiki/Delay-tolerant_networking) and [service-oriented](http://microservices.io/patterns/index.html) architectures, where toxy may act as MitM proxy among services in order to inject failure.
 
-It was mainly designed for fuzzing/evil testing purposes, when toxy becomes particularly useful to cover fault tolerance and resiliency capabilities of a system, especially in [disruption-tolerant networks](https://en.wikipedia.org/wiki/Delay-tolerant_networking) and [service-oriented](http://microservices.io/patterns/index.html) architectures, where toxy may act as MitM proxy among services.
-
-toxy allows you to plug in [poisons](#poisons), optionally filtered by [rules](#rules), which essentially can intercept and alter the HTTP flow as you need, performing multiple evil actions in the middle of that process, such as limiting the bandwidth, delaying TCP packets, injecting network jitter latency or replying with a custom error or status code.
+toxy allows you to plug in [poisons](#poisons), optionally filtered by [rules](#rules), which essentially can intercept and alter the HTTP flow as you need, performing multiple evil actions in the middle of that process, such as limiting the bandwidth, delaying network packets, injecting network jitter latency or replying with a custom error or status code.
 It operates only at L7 (application level).
 
 toxy can be fluently used [programmatically](#programmatic-api) or via [HTTP API](#http-api).
 It was built on top of [rocky](https://github.com/h2non/rocky), a full-featured middleware-oriented HTTP proxy, and it's also [pluggable](https://github.com/h2non/toxy/blob/master/examples/express.js) in [connect](https://github.com/senchalabs/connect)/[express](http://expressjs.com) as standard middleware.
 
-Requires node.js +0.12 or io.js +1.6.
+Requires node.js +4.
 
 ## Contents
 
@@ -85,7 +85,7 @@ Requires node.js +0.12 or io.js +1.6.
 
 There're some other similar solutions like `toxy` in the market, but most of them do not provide a proper programmatic control and usually are not easy to hack, configure or are directly closed to extensibility.
 
-Furthermore, the majority of the those solutions only operates at TCP L3 level stack instead of providing high-level abstractions to cover common requirements in the specific domain and nature of the HTTP L7 protocol, like toxy tries to provide
+Furthermore, the majority of those solutions only operates at TCP L3 level stack instead of providing high-level abstractions to cover common requirements in the specific domain and nature of the HTTP L7 protocol, like toxy tries to provide
 
 toxy brings a powerful hackable and extensible solution with a convenient abstraction, but without losing a proper low-level interface capabilities to deal with HTTP protocol primitives easily.
 
@@ -98,7 +98,7 @@ Via its built-in hierarchical domain specific middleware layer you can easily au
 
 **Poisons** are the specific logic which infects an incoming or outgoing HTTP transaction (e.g: injecting a latency, replying with an error). One HTTP transaction can be poisoned by one or multiple poisons, and those poisons can be also configured to infect both global or route level traffic.
 
-**Rules** are a kind of match validation filters that inspects an HTTP request/response in order to determine, given a certain rules, if the HTTP transaction should be poisioned or not (e.g: if headers matches, query params, method, body...).
+**Rules** are a kind of match validation filters that inspects an HTTP request/response in order to determine, given a certain rules, if the HTTP transaction should be poisoned or not (e.g: if headers matches, query params, method, body...).
 Rules can be reused and applied to both incoming and outgoing traffic flows, including different scopes: global, route or poison level.
 
 ### How it works
@@ -241,7 +241,7 @@ Poisons can be plugged to incoming or outgoing traffic flows, or even both.
 but it has not been forwarded to the target server yet.
 
 **Outgoing** poisoning refers to the traffic that has been forwarded to the target server and
-when proxy recieves the response from it, but that response has not been sent to the client yet.
+when proxy receives the response from it, but that response has not been sent to the client yet.
 
 This means, essentially, that you can plug in your poisons to infect the HTTP traffic
 before or after the request is forwarded to the target HTTP server or sent to the client.
@@ -273,7 +273,7 @@ Infects the HTTP flow injecting a latency jitter in the response
 **Arguments**:
 
 - **options** `object`
-  - **jitter** `number` - Jitter value in miliseconds
+  - **jitter** `number` - Jitter value in milliseconds
   - **max** `number` - Random jitter maximum value
   - **min** `number` - Random jitter minimum value
 
@@ -338,7 +338,7 @@ This poison is basically an alias to [throttle](#throttle).
 
 - **options** `object`
   - **bytes** `number` - Amount of chunk of bytes to send. Default `1024`
-  - **threshold** `number` - Packets time frame in miliseconds. Default `1000`
+  - **threshold** `number` - Packets time frame in milliseconds. Default `1000`
 
 ```js
 toxy.poison(toxy.poisons.bandwidth({ bytes: 512 }))
@@ -360,14 +360,14 @@ toxy.poison(toxy.poisons.bandwidth({ bytes: 512 }))
 
 Limits the amount of requests received by the proxy in a specific threshold time frame. Designed to test API limits. Exposes typical `X-RateLimit-*` headers.
 
-Note that this is very simple rate limit implementation, indeed limits are stored in-memory, therefore are completely volalite.
+Note that this is very simple rate limit implementation, indeed limits are stored in-memory, therefore are completely volatile.
 There're a bunch of featured and consistent rate limiter implementations in [npm](https://www.npmjs.com/search?q=rate+limit) that you can plug in as poison. You might be also interested in [token bucket algorithm](http://en.wikipedia.org/wiki/Token_bucket).
 
 **Arguments**:
 
 - **options** `object`
   - **limit** `number` - Total amount of requests. Default to `10`
-  - **threshold** `number` - Limit time frame in miliseconds. Default to `1000`
+  - **threshold** `number` - Limit time frame in milliseconds. Default to `1000`
   - **message** `string` - Optional error message when limit is reached.
   - **code** `number` - HTTP status code when limit is reached. Default to `429`.
 
@@ -379,7 +379,7 @@ toxy.poison(toxy.poisons.rateLimit({ limit: 5, threshold: 10 * 1000 }))
 
 <table>
 <tr>
-<td><b>Name</b></td><td>rateLimit</td>
+<td><b>Name</b></td><td>slowRead</td>
 </tr>
 <tr>
 <td><b>Poisoning Phase</b></td><td>incoming</td>
@@ -395,7 +395,7 @@ Reads incoming payload data packets slowly. Only valid for non-GET request.
 
 - **options** `object`
   - **chunk** `number` - Packet chunk size in bytes. Default to `1024`
-  - **threshold** `number` - Limit threshold time frame in miliseconds. Default to `1000`
+  - **threshold** `number` - Limit threshold time frame in milliseconds. Default to `1000`
 
 ```js
 toxy.poison(toxy.poisons.slowRead({ chunk: 2048, threshold: 1000 }))
@@ -421,7 +421,7 @@ Delays the HTTP connection ready state.
 **Arguments**:
 
 - **options** `object`
-  - **delay** `number` - Delay connection in miliseconds. Default to `1000`
+  - **delay** `number` - Delay connection in milliseconds. Default to `1000`
 
 ```js
 toxy.poison(toxy.poisons.slowOpen({ delay: 2000 }))
@@ -446,7 +446,7 @@ Delays the HTTP connection close signal (EOF).
 **Arguments**:
 
 - **options** `object`
-  - **delay** `number` - Delay time in miliseconds. Default to `1000`
+  - **delay** `number` - Delay time in milliseconds. Default to `1000`
 
 ```js
 toxy.poison(toxy.poisons.slowClose({ delay: 2000 }))
@@ -472,7 +472,7 @@ Restricts the amount of packets sent over the network in a specific threshold ti
 
 - **options** `object`
   - **chunk** `number` - Packet chunk size in bytes. Default to `1024`
-  - **delay** `object` - Data chunk delay time frame in miliseconds. Default to `100`
+  - **delay** `object` - Data chunk delay time frame in milliseconds. Default to `100`
 
 ```js
 toxy.poison(toxy.poisons.throttle({ chunk: 2048, threshold: 1000 }))
@@ -497,7 +497,7 @@ Aborts the TCP connection. From the low-level perspective, this will destroy the
 **Arguments**:
 
 - **options** `object`
-  - **delay** `number` - Aborts TCP connection after waiting the given miliseconds. Default to `0`
+  - **delay** `number` - Aborts TCP connection after waiting the given milliseconds. Default to `0`
   - **next** `boolean` - If `true`, the connection will be aborted if the target server takes more than the `delay` param time to reply. Default to `false`
   - **error** `Error` - Custom internal node.js error to use when destroying the socket. Default to `null`
 
@@ -530,7 +530,7 @@ Defines a response timeout. Useful when forward to potentially slow servers.
 
 **Arguments**:
 
-- **miliseconds** `number` - Timeout limit in miliseconds
+- **miliseconds** `number` - Timeout limit in milliseconds
 
 ```js
 toxy.poison(toxy.poisons.timeout(5000))
@@ -570,7 +570,7 @@ var proxy = toxy()
 // Register and enable the poison
 proxy
   .get('/foo')
-  .poison(customLatency(2000))
+  .poison(customLatencyPoison(2000))
 ```
 
 You can optionally extend the build-in poisons with your own poisons:
@@ -636,11 +636,11 @@ For instance, you can enable a certain poisons during a specific amount of time 
 **Arguments**:
 
 - **options** `object`
-  - **duration** `number` - Enable time inverval in miliseconds. Default to `1000`
-  - **threshold** `number` - Time threshold in miliseconds to wait before re-enable the poisoning. Default to `10000`
+  - **duration** `number` - Enable time inverval in milliseconds. Default to `1000`
+  - **threshold** `number` - Time threshold in milliseconds to wait before re-enable the poisoning. Default to `10000`
 
 ```js
-// Enable the poisoning only 100 miliseconds per each 10 seconds
+// Enable the poisoning only 100 milliseconds per each 10 seconds
 proxy.rule(toxy.rules.timeThreshold(100))
 // Enable poisoning during 1 second every minute
 proxy.rule(toxy.rules.timeThreshold({ duration: 1000, period: 1000 * 60 }))
@@ -846,7 +846,7 @@ List of available third-party rules provided by the community. PR are welcome.
 
 ### How to write rules
 
-Rules are simple middleware functions that resolve asyncronously with a `boolean` value to determine if a given HTTP transaction should be ignored when poisoning.
+Rules are simple middleware functions that resolve asynchronously with a `boolean` value to determine if a given HTTP transaction should be ignored when poisoning.
 
 Your rule must resolve with a `boolean` param calling the `next(err,
 shouldIgnore)` function in the middleware, passing a `true` value if the rule has not matches and should not apply the poisoning, and therefore continuing with the next middleware stack.
@@ -1068,7 +1068,12 @@ Disable a poison by name identifier
 #### toxy#remove(poison)
 Return: `boolean`
 
-Remove poison by name identifier.
+Remove an incoming traffic poison by name identifier or object reference.
+
+#### toxy#removeOutgoing(poison)
+Return: `boolean`
+
+Remove an outgoing traffic poison by name identifier or object reference.
 
 #### toxy#isEnabled(poison)
 Return: `boolean`
@@ -1113,7 +1118,7 @@ Return an array of registered `outgoing` poisons.
 #### toxy#flush()
 Alias: `flushPoisons`
 
-Remove all the registered poisons.
+Remove all the registered poisons for both incoming and outgoing traffic flows.
 
 #### toxy#enableRule(rule)
 
@@ -1175,7 +1180,7 @@ Current toxy semantic version.
 
 `ToxyRoute` exposes the same interface as `Toxy` global interface, it just adds some route level [additional methods](https://github.com/h2non/rocky#routepath).
 
-Further actions you perform againts the `ToxyRoute` API will only be applicable at route-level (nested). In other words: you already know the API.
+Further actions you perform against the `ToxyRoute` API will only be applicable at route-level (nested). In other words: you already know the API.
 
 This example will probably clarify possible doubts:
 ```js
